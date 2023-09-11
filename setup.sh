@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if the user is root
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root or with sudo" 
+   exit 1
+fi
+
 # Function to display script usage
 usage() {
     echo "Usage: $0 [-h]"
@@ -61,7 +67,22 @@ declare -a steps=(
   "DEBIAN_FRONTEND=noninteractive apt full-upgrade -y"
 	"DEBIAN_FRONTEND=noninteractive apt autoremove -y"
   "DEBIAN_FRONTEND=noninteractive apt install git golang tmux nano rsync -y"
+  "cd ~/appserve && go build"
+  "cd ~/dynodns && go build"
+  "cd ~/neosay && go build"
 )
+
+# List of GitHub repositories to clone
+declare -a repositories=(
+  "https://github.com/donuts-are-good/appserve.git"
+  "https://github.com/donuts-are-good/dynodns"
+  "https://github.com/donuts-are-good/neosay"
+)
+
+# Add the repository cloning steps to the main steps array
+for repo in "${repositories[@]}"; do
+  steps+=("git clone '$repo' ~/")
+done
 
 # Create a function to check the success/failure of each step
 check_status() {
